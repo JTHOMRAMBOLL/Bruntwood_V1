@@ -9,7 +9,7 @@ Created on Tue Jan 26 17:21:27 2021
 import matplotlib.pyplot as plt
 import pandas as pd
 import itertools
-from Bruntwood_Systems import Get_Systems#,Filter_INT
+from Bruntwood_Systems import Get_Systems,Filter_INT
 
 
 
@@ -99,7 +99,6 @@ Total_Plot['Annual Fan Power Load(kWh/m2)']=Fan_Power(Baseline_SFP,Model_Mass_Fl
 #Example Steady state System Aplication 
 
 
-#HtgEff,ClgEff,LghtEff,FanEff=[0.9,(1/4.5),(0.4*0.92),0.9]
 
 Sys_Scenario={'Base':{'HtgEff':0.9,'ClgEff':(1/2),'LghtEff':1,'FanEff':1},
               'Dummy':{'HtgEff':(1/4.5),'ClgEff':(1/4.5),'LghtEff':(0.4*0.92),'FanEff':0.45}}

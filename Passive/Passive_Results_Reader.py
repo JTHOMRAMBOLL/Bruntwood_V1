@@ -129,10 +129,10 @@ def get_SQL(sql_FP):
     electric_equip = sql_obj.data_collections_by_output_name(electric_equip_outputs)
     hot_water = sql_obj.data_collections_by_output_name(shw_outputs)
     vent_masss_flow= sql_obj.data_collections_by_output_name(Mechanical_Vent)
-    #fresh_air_Flow= sql_obj.data_collections_by_output_name(Fresh_Air)
+    fresh_air_Flow= sql_obj.data_collections_by_output_name(Fresh_Air)
     
     Results_Dict={"out:Annual Heat":heating,"out:Annual Cool":cooling,"out:Annual Lighting":lighting,"out:Annual Elec equipt":electric_equip,
-                  "out:Annual DHW":hot_water,"out:Annual Ventilation":vent_masss_flow}
+                  "out:Annual DHW":hot_water,"out:Annual Mech Ventilation":vent_masss_flow,"out: Fresh Air Flow Rate":fresh_air_Flow}
     return(Results_Dict)
 
 def sql_Data(_data,type_):
