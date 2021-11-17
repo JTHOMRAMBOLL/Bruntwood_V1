@@ -102,6 +102,10 @@ vent_loss_outputs = LoadBalance.VENT_LOSS
 vent_gain_outputs = LoadBalance.VENT_GAIN
 nat_vent_gain_outputs = LoadBalance.NAT_VENT_GAIN
 nat_vent_loss_outputs = LoadBalance.NAT_VENT_LOSS
+
+Fresh_Air="Zone Infiltration Current Density Volume Flow Rate"
+Mechanical_Vent="Zone Mechanical Ventilation Mass Flow Rate"
+
 all_output = \
 [cooling_outputs, heating_outputs, lighting_outputs, electric_equip_outputs, gas_equip_outputs,
  process_outputs, shw_outputs, fan_electric_outputs, pump_electric_outputs,
@@ -124,8 +128,11 @@ def get_SQL(sql_FP):
     lighting = sql_obj.data_collections_by_output_name(lighting_outputs)
     electric_equip = sql_obj.data_collections_by_output_name(electric_equip_outputs)
     hot_water = sql_obj.data_collections_by_output_name(shw_outputs)
-
-    Results_Dict={"out:Annual Heat":heating,"out:Annual Cool":cooling,"out:Annual Lighting":lighting,"out:Annual Elec equipt":electric_equip,"out:Annual DHW":hot_water}
+    vent_masss_flow= sql_obj.data_collections_by_output_name(Mechanical_Vent)
+    #fresh_air_Flow= sql_obj.data_collections_by_output_name(Fresh_Air)
+    
+    Results_Dict={"out:Annual Heat":heating,"out:Annual Cool":cooling,"out:Annual Lighting":lighting,"out:Annual Elec equipt":electric_equip,
+                  "out:Annual DHW":hot_water,"out:Annual Ventilation":vent_masss_flow}
     return(Results_Dict)
 
 def sql_Data(_data,type_):
@@ -217,6 +224,7 @@ def extract_name(Name):
 
 
 directory_fp=r'C:\\Users\\JTHOM\\OneDrive - Ramboll\\Documents\\Dump\\Sql\\ST_James\\Directory.xlsx'
+
 DF=pd.read_excel(directory_fp)
 Names=DF['Name']
 File_Paths=DF['File_Path']
