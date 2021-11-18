@@ -4,7 +4,7 @@ import sqlite3
 import matplotlib.pyplot as plt
 import re
 import time
-
+import numpy 
 try:
     from ladybug.sql import SQLiteResult
     from ladybug.datacollection import HourlyContinuousCollection, \
@@ -54,8 +54,11 @@ def serialize_data(data_dicts):
     elif data_dicts[0]['type'] == 'DailyCollection':
         return [DailyCollection.from_dict(data) for data in data_dicts]
 
-
-
+def pos(col): 
+  return col[col > 0].sum()
+  
+def neg(col): 
+  return col[col < 0].sum()
 
 # List of all the output strings that will be requested
 cooling_outputs = LoadBalance.COOLING + (
@@ -128,12 +131,37 @@ def get_SQL(sql_FP):
     lighting = sql_obj.data_collections_by_output_name(lighting_outputs)
     electric_equip = sql_obj.data_collections_by_output_name(electric_equip_outputs)
     hot_water = sql_obj.data_collections_by_output_name(shw_outputs)
+    
     vent_masss_flow= sql_obj.data_collections_by_output_name(Mechanical_Vent)
-    fresh_air_Flow= sql_obj.data_collections_by_output_name(Fresh_Air)
+    #fresh_air_Flow= sql_obj.data_collections_by_output_name(Fresh_Air)
+    
+    infil_gain = sql_obj.data_collections_by_output_name(infil_gain_outputs)
+    infil_loss = sql_obj.data_collections_by_output_name(infil_loss_outputs)
+    vent_loss = sql_obj.data_collections_by_output_name(vent_loss_outputs)
+    vent_gain = sql_obj.data_collections_by_output_name(vent_gain_outputs)
+    
+    
+        # do arithmetic with any of the gain/loss data collections
+    if len(infil_gain) == len(infil_loss):
+        infiltration_load = subtract_loss_from_gain(infil_gain, infil_loss)
+    if len(vent_gain) == len(vent_loss) == len(cooling) == len(heating):
+        mech_vent_loss = subtract_loss_from_gain(heating, vent_loss)
+        mech_vent_gain = subtract_loss_from_gain(cooling, vent_gain)
+        mech_vent_load = [data.duplicate() for data in
+                          subtract_loss_from_gain(mech_vent_gain, mech_vent_loss)]
+        for load in mech_vent_load:
+            load.header.metadata['type'] = \
+                'Zone Ideal Loads Ventilation Heat Energy'
+    
     
     Results_Dict={"out:Annual Heat":heating,"out:Annual Cool":cooling,"out:Annual Lighting":lighting,"out:Annual Elec equipt":electric_equip,
-                  "out:Annual DHW":hot_water,"out:Annual Mech Ventilation":vent_masss_flow,"out: Fresh Air Flow Rate":fresh_air_Flow}
+                  "out:Annual DHW":hot_water,"out:Annual Mech Ventilation":vent_masss_flow,'out: Infiltration Load':infiltration_load,
+                  "out:Mech Vent Load":mech_vent_load}
     return(Results_Dict)
+
+
+
+
 
 def sql_Data(_data,type_):
     
@@ -171,14 +199,41 @@ def sql_Data(_data,type_):
     return(list(data.values))
 
 
+
+
+
+
+
+
+
+
+
 def Results_PP(Results_Dict,Name):
     t1=time.time()
     Results=[sql_Data(k,v) for k,v in zip(Results_Dict.values(),Results_Dict.keys())]
     DF=pd.DataFrame(Results,index=Results_Dict.keys()).T
     Index=pd.date_range(start='1/1/2021', periods=8760, freq='h')
     DF=DF.set_index(Index)
+    
+    
+    
+    
     Summed_Totals=DF.sum()
     Summed_Totals['out:Name']=Name
+    
+    #Fresh air load pre processing 
+    Summed_Totals["out:FA Cooling Load"]=DF["out:Mech Vent Load"].agg([pos])['pos']
+    Summed_Totals["out:FA Heating Load"]=DF["out:Mech Vent Load"].agg([neg])['neg']
+    Summed_Totals["out:FA Total Load"]=(-1*Summed_Totals["out:FA Heating Load"])+Summed_Totals["out:FA Cooling Load"]
+    #Infiltration load pre processing 
+    Summed_Totals["out:INF Cooling Load"]=DF['out: Infiltration Load'].agg([pos])['pos']
+    Summed_Totals["out:INF Heating Load"]=DF['out: Infiltration Load'].agg([neg])['neg']
+    Summed_Totals["out:INF Total Load"]=(-1*Summed_Totals["out:INF Heating Load"])+Summed_Totals["out:INF Cooling Load"]
+    
+    print(Summed_Totals)
+    
+    #Summed_Totals["out:FA Cooling Load"]=Temp["out:FA Cooling Load"]
+    #Summed_Totals["out:FA Heating Load"]=Temp["out:FA Heating Load"]
     Dict=Summed_Totals.to_dict()
     t2=time.time()
     print(("It takes %s seconds to extract "+Name) % (t2 - t1))

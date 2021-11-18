@@ -131,6 +131,8 @@ def Get_Systems(FilePath):
                   Systems_Data['Efficency Type'].loc[i],Systems_Data['Description'].loc[i],
                   pd.read_excel(FilePath,sheet_name=Systems_Data['System Ref'].loc[i],index_col=0))                                                   
                   for i in Systems_Data['System Ref']]
+    
+    
     S_Names=[i.Name for i in Systems]
     Sys_Out=dict(zip(S_Names,Systems))
     
@@ -145,9 +147,9 @@ def Filter_INT(SS_Ints,SearchTerm):
     return(Filter_Type)
 
 
-#FP_Supply_Side_Int=FP=r'\\UKrammanfiler01\Projects\1620010755\05-Analysis\Sustainability Solutions\BEAR\Python\Supply Side\Reference_Info\WP2_SystemsV2.xlsx'
-#SS_INTS=Get_Systems(FP_Supply_Side_Int)
-#print(SS_INTS.)
-#Test=Filter_INT(SS_INTS[0],'Cooling')
-#print(Test)
+FP_Supply_Side_Int=FP=r'C:\\Users\\JTHOM\\OneDrive - Ramboll\\Documents\\Dump\\Sql\\ST_James\\SJB_PC_WP2_SystemsV1.xlsx'
+SS_INTS=Get_Systems(FP_Supply_Side_Int)
+print(SS_INTS[0])
+Test=Filter_INT(SS_INTS[0],'Heating&Cooling')[0].Mean_Eff()
+print(Test)
 

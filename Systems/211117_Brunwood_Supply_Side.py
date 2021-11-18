@@ -18,20 +18,20 @@ def percentage_change(col1,col2):
     return ((col2 - col1) / col1) * 100
 
 #This function calculates the energy required using Delta T and Volume in m3
-def Vent_Eng(DryBulb,Air_Volume,Setpoint,FloorArea):        
+def Vent_Eng(DryBulb,Air_Volume,Setpoint):        
 
     cp=1.0061
     density=1.202
     DeltaT=Setpoint-DryBulb
     #print(DeltaT)
-    ExeriorEnergy=Air_Volume*(density*cp)*DeltaT
-    #print(ExeriorEnergy)
-    Energy=ExeriorEnergy.sum(axis=0)[0]/GrossFloorArea
+    ExeriorEnergy=(Air_Volume/8760)*(density*cp)*DeltaT
+    print((Air_Volume))
+    Energy=ExeriorEnergy.sum(axis=0)[0]#/GrossFloorArea
     return(Energy)
 
 
-def Fan_Power(SFP,Air_Volume,GrossFloorArea):
-    Fan_Power=(SFP*(Air_Volume)*8670)/GrossFloorArea
+def Fan_Power(SFP,Air_Volume):
+    Fan_Power=(SFP*(Air_Volume))
     
     return(Fan_Power)
 
@@ -43,27 +43,30 @@ plt.close('all')
 
 #Building Level Data 
 #GrossFloorArea=14900.521257
-GrossFloorArea=15783.484657#model
+GrossFloorArea=3916.185#model
 Building_FA_Volume=6.928416
 Model_Mass_Flow=7.108677
-Floor_Area=1197.73
+#Floor_Area=1197.73# post process small power loads 
 Baseline_SFP=1.6#To be confirmed 
 
 
 
-Totals_FP=r'\\UKrammanfiler01\Projects\1620010755\05-Analysis\Sustainability Solutions\BEAR\Results\210617_Complex\data.xlsx'
+#Totals_FP=r'\\UKrammanfiler01\Projects\1620010755\05-Analysis\Sustainability Solutions\BEAR\Results\210617_Complex\data.xlsx'
+Totals_FP=r'C:\\Users\\JTHOM\\OneDrive - Ramboll\\Documents\\Dump\\Sql\\ST_James\\data.xlsx'
 Weather_FP=r'\\UKrammanfiler01\Projects\1620010755\05-Analysis\Sustainability Solutions\BEAR\Results\210617_Complex\Trafford_House_WeatherData.xlsx'
 
 
 #Main Data impoirt of the Demand side scenarios
 Totals_Data=pd.read_excel(Totals_FP)#.dropna().drop_duplicates(keep='first')
 Weather_Data=pd.read_excel(Weather_FP,index_col=0)#.dropna().drop_duplicates(keep='first')
-
+#print(Weather_Data)
 
 
 #Set index to unique name and rename coloumns for display purposes 
-Totals_Data=Totals_Data.set_index(Totals_Data['out:Group'])
-Total_Plot=Totals_Data.filter(['out:Annual Heat','out:Annual Cool','out:Annual Lighting','out:Annual Elec equipt','out:Annual DHW'],axis=1)
+Totals_Data=Totals_Data.set_index(Totals_Data['out:Name'])
+#Totals_Data=Totals_Data/GrossFloorArea
+
+Total_Plot=Totals_Data.filter(['out:Annual Heat','out:Annual Cool','out:Annual Lighting','out:Annual Elec equipt','out:Annual DHW','out:Annual Ventilation','out: Fresh Air Flow Rate'],axis=1)
 Total_Plot['Total Energy (kwh/m2)']=Total_Plot.sum(axis=1)
 Total_Plot.rename(columns = {'out:Annual Heat':'Annual Heating Load (kWh/m2)', 'out:Annual Cool':'Annual Cooling Load (kWh/m2)', 
                              'out:Annual Lighting':'Annual Lighting Load (kWh/m2)','out:Annual Elec equipt':'Annual Equipment Load (kWh/m2)',
@@ -71,7 +74,7 @@ Total_Plot.rename(columns = {'out:Annual Heat':'Annual Heating Load (kWh/m2)', '
 
 Demand_Scenarios=range(Total_Plot.shape[0])
 print(Demand_Scenarios)
-print("Demand Scenario length" +str(Total_Plot.shape[0]))
+print("Demand Scenario length= " +str(Total_Plot.shape[0]))
 
 
 
@@ -84,15 +87,16 @@ Total_Plot=Total_Plot/GrossFloorArea
 #Total_Plot['Annual Small Power load (kWh/m2)']= 8572 /Floor_Area
 
 
-#Post Process the Freash Air Load 
-Total_Plot['Annual Fresh Air Load (kWh/m2)']=Vent_Eng(Weather_Data,Building_FA_Volume,12.9,GrossFloorArea)
-
+#Post Process the Fresh Air Load 
+Total_Plot['Annual Fresh Air Load (kWh/m2)']=[Vent_Eng(Weather_Data,B_FA,12.9) for B_FA in Total_Plot['out: Fresh Air Flow Rate']]
+print(Total_Plot['Annual Heating Load (kWh/m2)'])
 #Adjust Heating Load to suit
 Total_Plot['Annual Heating Load (kWh/m2)']=Total_Plot['Annual Heating Load (kWh/m2)']-Total_Plot['Annual Fresh Air Load (kWh/m2)']
-
+print(Total_Plot['Annual Fresh Air Load (kWh/m2)'])
+print(Total_Plot['Annual Heating Load (kWh/m2)'])
 #Post Processed Fans Load 
-Total_Plot['Annual Fan Power Load(kWh/m2)']=Fan_Power(Baseline_SFP,Model_Mass_Flow,GrossFloorArea)#This is a place holder for structure
-
+Total_Plot['Annual Fan Power Load(kWh/m2)']=[Fan_Power(Baseline_SFP,Model_Mass_Flow) for Model_Mass_Flow in Total_Plot['out:Annual Ventilation'] ]#This is a place holder for structure
+print(Total_Plot['Annual Fan Power Load(kWh/m2)'])
 
 
 
@@ -118,7 +122,7 @@ Total_Plot['Annual Equipment Load (kWh/m2)']=Total_Plot['Annual Equipment Load (
 
 ##############################################--------Supply Side Intervention Import ---------------------------##################################################
 
-FP_Supply_Side_Int=FP=r'\\UKrammanfiler01\Projects\1620010755\05-Analysis\Sustainability Solutions\BEAR\Python\Supply Side\Reference_Info\WP2_SystemsV2.xlsx'
+FP_Supply_Side_Int=FP=r'C:\\Users\\JTHOM\\OneDrive - Ramboll\\Documents\\Dump\\Sql\\ST_James\\SJB_PC_WP2_SystemsV1.xlsx'
 SS_INTS=Get_Systems(FP_Supply_Side_Int)
 
 
@@ -155,13 +159,13 @@ print('INT_Vent',len(Ventilation))
 print('INT_Renew',len(Renewables))
 
 INT_Demand=Demand_Scenarios#[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
-INT_Heat_Cool=[0,1,2,3,4]
-INT_DHW=[0,1,2]
-INT_Light=[0,1,2,3]
-INT_Light_CON=[0,1,2]
-INT_Plug=[0,1]
-INT_Vent=[0,1,2,3,4]
-INT_Renew=[0,1,2,3]
+INT_Heat_Cool=list(range(0,len(Heating_Cooling),1))#len[0,1,2,3,4]
+INT_DHW=list(range(0,len(DHW_Master),1))#[0,1,2]
+INT_Light=list(range(0,len(Lighting),1))#[0,1,2,3]
+INT_Light_CON=list(range(0,len(Lighting_Cont),1))#[0,1,2]
+INT_Plug=list(range(0,len(EquipLoads),1))#[0,1]
+INT_Vent=list(range(0,len(Ventilation),1))#[0,1,2,3,4]
+INT_Renew=list(range(0,len(Renewables),1))#[0,1,2,3]
 
 print(len(list(itertools.product(INT_Demand,INT_Heat_Cool,INT_DHW,INT_Light,INT_Light_CON,INT_Plug,INT_Vent,INT_Renew))))
 
@@ -247,7 +251,7 @@ def Supply_Side(Demand,SEL_Heat_Cool,SEL_DHW,SEL_Light,SEL_Light_CON,SEL_Equip,S
     
     
     Perm_Vent={'Ref':Vent.System_Ref,'Name':Vent.Name,'Eff':Vent.Vent_Eff_Cal()}
-    Vent_Energy=Fan_Power(Perm_Vent['Eff']['SPF'],Model_Mass_Flow,GrossFloorArea)
+    Vent_Energy=Fan_Power(Perm_Vent['Eff']['SPF'],Perm_Demand['out: Fresh Air Flow Rate'])
     
     FA_Energy=Perm_Vent['Eff']['HRU']*Perm_Demand['Annual Fresh Air Load (kWh/m2)']
     
@@ -260,7 +264,7 @@ def Supply_Side(Demand,SEL_Heat_Cool,SEL_DHW,SEL_Light,SEL_Light_CON,SEL_Equip,S
     ST_Energy=-Perm_Renew['Yeild']['PT Yeild']
     #print(Perm_Vent['Eff']['HRU'])
     #print(Heating_Energy,Cooling_Energy,DHW_Energy,Lighting_Energy,Equip_Energy,Vent_Energy,FA_Energy,PV_Energy,ST_Energy)
-    
+ 
     Store=[Perm_Heat_Cool,Perm_DHW,Perm_Light,Perm_Light_CON,Perm_Equip,Perm_Vent,Perm_Renew]
     Name=('.'.join([Perm_Demand.name]+[i['Ref'] for i in Store]))
     
@@ -291,7 +295,7 @@ def Supply_Side(Demand,SEL_Heat_Cool,SEL_DHW,SEL_Light,SEL_Light_CON,SEL_Equip,S
 
        
     return(Dict)
-test=Supply_Side(10,3,1,1,1,1,1,3)
+test=Supply_Side(0,0,0,0,0,0,0,0)
 print(test)
 print(len(list(itertools.product(INT_Demand,INT_Heat_Cool,INT_DHW,INT_Light,INT_Light_CON,INT_Plug,INT_Vent,INT_Renew))))
 
@@ -308,7 +312,7 @@ print(Results.shape[0])
 
 
 
-Results_FP=r'C:\\Users\\JTHOM\\OneDrive - Ramboll\\Documents\\210618TrafordHouseResults.xlsx'
+Results_FP=r'C:\Users\JTHOM\OneDrive - Ramboll\Documents\Dump\\Sql\\ST_James\\test.xlsx'
 Results.to_excel(Results_FP,sheet_name='Results',header=True) 
    
 ##############################################-----------------------------------------------------------------##################################################
