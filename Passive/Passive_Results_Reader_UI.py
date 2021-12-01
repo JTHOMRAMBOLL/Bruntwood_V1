@@ -172,8 +172,9 @@ def get_SQL(sql_FP):
     
     
     Results_Dict={"out:Annual Heat":heating,"out:Annual Cool":cooling,"out:Annual Lighting":lighting,"out:Annual Elec equipt":electric_equip,
-                  "out:Annual DHW":hot_water,"out:Annual Mech Ventilation":vent_masss_flow,'out: Infiltration Load':infiltration_load,
+                  "out:Annual Mech Ventilation":vent_masss_flow,'out: Infiltration Load':infiltration_load,
                   "out:Mech Vent Load":mech_vent_load}
+    print(Results_Dict)
     return(Results_Dict)
 
 
@@ -181,8 +182,9 @@ def sql_Data(_data,type_):
     
     operator = '+'
     statement = 'data {} data_i'.format(operator)
-
+    
     # perform the arithmetic operation
+
     data = _data[0]
     for data_i in _data[1:]:
         data = eval(statement, {'data': data, 'data_i': data_i})  # I love Python!
@@ -213,10 +215,11 @@ def sql_Data(_data,type_):
     return(list(data.values))
 
 
+tick=0
 
-
-def Results_PP(Results_Dict,Name):
-    t1=time.time()
+def Results_PP(Results_Dict,Name,runs):
+    global tick
+    tick+= 1
     Results=[sql_Data(k,v) for k,v in zip(Results_Dict.values(),Results_Dict.keys())]
     DF=pd.DataFrame(Results,index=Results_Dict.keys()).T
     Index=pd.date_range(start='1/1/2021', periods=8760, freq='h')
@@ -236,14 +239,13 @@ def Results_PP(Results_Dict,Name):
     Summed_Totals["out:INF Cooling Load"]=DF['out: Infiltration Load'].agg([pos])['pos']
     Summed_Totals["out:INF Heating Load"]=DF['out: Infiltration Load'].agg([neg])['neg']
     Summed_Totals["out:INF Total Load"]=(-1*Summed_Totals["out:INF Heating Load"])+Summed_Totals["out:INF Cooling Load"]
-    
+    Summed_Totals["out:Annual DHW"]=0
     print(Summed_Totals)
     
     #Summed_Totals["out:FA Cooling Load"]=Temp["out:FA Cooling Load"]
     #Summed_Totals["out:FA Heating Load"]=Temp["out:FA Heating Load"]
     Dict=Summed_Totals.to_dict()
-    t2=time.time()
-    print(("It takes %s seconds to extract "+Name) % (t2 - t1))
+    sg.one_line_progress_meter('Running AL Sim',  tick,runs,orientation='h',no_button=True)
     return(Dict)
 
 def extract_name(Name):
@@ -316,6 +318,7 @@ def Direct(directory_fp):
     Names=DF['Simulation Name']
     File_Paths=DF['File Path']
     Directory=dict(zip(Names,File_Paths))
+    print(Directory)
     return(Directory)
 
 def Loadfile():
@@ -397,7 +400,7 @@ def download_results(job: Job):
                 'Some of the runs of the job have failed.\n'
                 'It may not be possible to scroll through all results.'
             )
-    sg.one_line_progress_meter('Running AL Sim', count,total_run,orientation='h',no_button=True)
+        sg.one_line_progress_meter('Running AL Sim', count,total_run,orientation='h',no_button=True)
     #print(run_folder)
 
 
@@ -413,9 +416,13 @@ def extract_user_inputs(job: Job):
     Directory["File Path"]=[str(results_folder.joinpath(i.id).resolve())+'\\eplusout.sql' for i in job.runs]
     Directory["Job Path"]=[str(results_folder) for i in job.runs]
     print(Directory)
+    runs = job.runs
+    total_run = len(runs)
+    count=0
     inp_value = []
     for run in job.runs:
-    
+        count+=1
+        print(count)
         for inp in run.status.inputs:
             
             if inp.name =='_name_' :
@@ -428,13 +435,14 @@ def extract_user_inputs(job: Job):
                     print("na")
         inp_value.append(Name)          
         #print(inp_value)
+        sg.one_line_progress_meter('Running AL Sim', count,total_run,orientation='h',no_button=True)
     Directory['Simulation Name']=inp_value
     DF=pd.DataFrame.from_dict(Directory)
     FP=str(results_folder)+"\\Directory.xlsx"
     DF.to_excel(FP)
-    print(FP)
     
-    return  DF
+    
+    return  FP
 
 def get_job(_url ='https://app.pollination.cloud/projects/jamesthomson/st-james/jobs/57b120e6-0e92-4ccd-b290-464769b02f7f',api_key='ECA6D3DC.51B149B0BB54DF2120624C14'):
 
@@ -527,7 +535,7 @@ layout = [
             
             [sg.Button('Load Directory'),sg.Button('Generate Data File')],
             
-            [sg.Image(r'C:\Users\jthom\OneDrive - Ramboll\Python Scripts\Python UI\Ramboll_Logo (1).png',size=(150,30))]
+            [sg.Image(r'C:\\Users\\jthom\\OneDrive - Ramboll\\Python Scripts\\Python UI\\Ramboll_Logo (1).png',size=(150,30))]
             
             ]
 
@@ -541,8 +549,8 @@ while True:
         break
     if event == 'Load Directory':
         try:
-            Direcory=Loadfile()
-            Simulation_Names=Direcory.keys()
+            Directory=Loadfile()
+            Simulation_Names=Directory.keys()
             window.Element('Sim_Sel').update(values=Simulation_Names)
         except:
             sg.popup("Cancel", "No data found")
@@ -557,9 +565,20 @@ while True:
             LoadJob()
         except:
             sg.popup("error", "Failed to create directory")    
-                
+    
+    
+    if event == 'Generate Data File':
         
-        
+        runs = len(job.runs)
+        print(values['Sim_Sel'])
+        sql_fp=[Directory.get(key) for key in values['Sim_Sel']]
+        print(sql_fp)
+        sql_Names=values['Sim_Sel']
+        print(sql_fp,sql_Names)
+        Batch_Download=pd.DataFrame([Results_PP(get_SQL(_sql),extract_name(Name_in),runs) for (Name_in,_sql) in zip(sql_Names,sql_fp)])
+        FP=r'C:\\Users\\JTHOM\\OneDrive - Ramboll\\Documents\\GitHub\\Bruntwood_V1\data\\57b120e6-0e92-4ccd-b290-464769b02f7f\\data.xlsx'
+        Batch_Download.to_excel(FP)
+
         
     if event=='Exit':
         break

@@ -10,9 +10,10 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import itertools
 from Bruntwood_Systems import Get_Systems,Filter_INT
+import PySimpleGUI as sg
+from sqlalchemy import create_engine
 
-
-
+engine = create_engine('sqlite:///C:\\Users\\JTHOM\\OneDrive - Ramboll\\Documents\\GitHub\\Bruntwood_V1\\data\\57b120e6-0e92-4ccd-b290-464769b02f7f\\results.sql')
 #################---------General Functions-------------################### 
 def percentage_change(col1,col2):
     return ((col2 - col1) / col1) * 100
@@ -43,7 +44,7 @@ plt.close('all')
 
 #Building Level Data 
 #GrossFloorArea=14900.521257
-GrossFloorArea=3916.185#model
+GrossFloorArea=39161.19#St_James
 Building_FA_Volume=6.928416
 Model_Mass_Flow=7.108677
 #Floor_Area=1197.73# post process small power loads 
@@ -52,8 +53,8 @@ Baseline_SFP=1.6#To be confirmed
 
 
 #Totals_FP=r'\\UKrammanfiler01\Projects\1620010755\05-Analysis\Sustainability Solutions\BEAR\Results\210617_Complex\data.xlsx'
-Totals_FP=r'C:\\Users\\JTHOM\\OneDrive - Ramboll\\Documents\\Dump\\Sql\\ST_James\\data.xlsx'
-Weather_FP=r'\\UKrammanfiler01\Projects\1620010755\05-Analysis\Sustainability Solutions\BEAR\Results\210617_Complex\Trafford_House_WeatherData.xlsx'
+Totals_FP=r'C:\\Users\\JTHOM\\OneDrive - Ramboll\\Documents\\GitHub\\Bruntwood_V1\\data\\57b120e6-0e92-4ccd-b290-464769b02f7f\\data.xlsx'
+Weather_FP=r'\\UKrammanfiler01\\Projects\\1620010755\\05-Analysis\\Sustainability Solutions\\BEAR\\Results\\210617_Complex\\Trafford_House_WeatherData.xlsx'
 
 
 #Main Data impoirt of the Demand side scenarios
@@ -66,9 +67,9 @@ Weather_Data=pd.read_excel(Weather_FP,index_col=0)#.dropna().drop_duplicates(kee
 Totals_Data=Totals_Data.set_index(Totals_Data['out:Name'])
 #Totals_Data=Totals_Data/GrossFloorArea
 
-Total_Plot=Totals_Data.filter(['out:Annual Heat','out:Annual Cool','out:Annual Lighting','out:Annual Elec equipt','out:Annual DHW','out:Annual Ventilation','out: Fresh Air Flow Rate'],axis=1)
+Total_Plot=Totals_Data.filter(['out:Annual Heat','out:FA Heating Load','out:Annual Cool','out:Annual Lighting','out:Annual Elec equipt','out:Annual DHW','out:Annual Mech Ventilation','out: Fresh Air Flow Rate'],axis=1)
 Total_Plot['Total Energy (kwh/m2)']=Total_Plot.sum(axis=1)
-Total_Plot.rename(columns = {'out:Annual Heat':'Annual Heating Load (kWh/m2)', 'out:Annual Cool':'Annual Cooling Load (kWh/m2)', 
+Total_Plot.rename(columns = {'out:Annual Heat':'Annual Heating Load (kWh/m2)','out:FA Heating Load':'Annual Fresh Air Load (kWh/m2)', 'out:Annual Cool':'Annual Cooling Load (kWh/m2)', 
                              'out:Annual Lighting':'Annual Lighting Load (kWh/m2)','out:Annual Elec equipt':'Annual Equipment Load (kWh/m2)',
                              'out:Annual DHW':'Annual DHW Load (kWh/m2)'},inplace=True)
 
@@ -88,14 +89,19 @@ Total_Plot=Total_Plot/GrossFloorArea
 
 
 #Post Process the Fresh Air Load 
-Total_Plot['Annual Fresh Air Load (kWh/m2)']=[Vent_Eng(Weather_Data,B_FA,12.9) for B_FA in Total_Plot['out: Fresh Air Flow Rate']]
-print(Total_Plot['Annual Heating Load (kWh/m2)'])
+#Total_Plot['Annual Fresh Air Load (kWh/m2)']=[Vent_Eng(Weather_Data,B_FA,12.9) for B_FA in Total_Plot['out: Fresh Air Flow Rate']]
+
+
+#print(Total_Plot['Annual Heating Load (kWh/m2)'])
 #Adjust Heating Load to suit
+Total_Plot['Annual Fresh Air Load (kWh/m2)']=Total_Plot['Annual Fresh Air Load (kWh/m2)'].abs()
 Total_Plot['Annual Heating Load (kWh/m2)']=Total_Plot['Annual Heating Load (kWh/m2)']-Total_Plot['Annual Fresh Air Load (kWh/m2)']
-print(Total_Plot['Annual Fresh Air Load (kWh/m2)'])
-print(Total_Plot['Annual Heating Load (kWh/m2)'])
+Total_Plot['FA Percentage']=Total_Plot['Annual Fresh Air Load (kWh/m2)']/Total_Plot['Annual Heating Load (kWh/m2)']
+
+print(Total_Plot['FA Percentage'])
+#print(Total_Plot['Annual Heating Load (kWh/m2)'])
 #Post Processed Fans Load 
-Total_Plot['Annual Fan Power Load(kWh/m2)']=[Fan_Power(Baseline_SFP,Model_Mass_Flow) for Model_Mass_Flow in Total_Plot['out:Annual Ventilation'] ]#This is a place holder for structure
+Total_Plot['Annual Fan Power Load(kWh/m2)']=[Fan_Power(Baseline_SFP,Model_Mass_Flow) for Model_Mass_Flow in Total_Plot['out:Annual Mech Ventilation'] ]#This is a place holder for structure
 print(Total_Plot['Annual Fan Power Load(kWh/m2)'])
 
 
@@ -124,7 +130,6 @@ Total_Plot['Annual Equipment Load (kWh/m2)']=Total_Plot['Annual Equipment Load (
 
 FP_Supply_Side_Int=FP=r'C:\\Users\\JTHOM\\OneDrive - Ramboll\\Documents\\Dump\\Sql\\ST_James\\SJB_PC_WP2_SystemsV1.xlsx'
 SS_INTS=Get_Systems(FP_Supply_Side_Int)
-
 
 
 SS_Input_Demand=Total_Plot#.drop(['Total Energy (kwh/m2)'])
@@ -167,7 +172,8 @@ INT_Plug=list(range(0,len(EquipLoads),1))#[0,1]
 INT_Vent=list(range(0,len(Ventilation),1))#[0,1,2,3,4]
 INT_Renew=list(range(0,len(Renewables),1))#[0,1,2,3]
 
-print(len(list(itertools.product(INT_Demand,INT_Heat_Cool,INT_DHW,INT_Light,INT_Light_CON,INT_Plug,INT_Vent,INT_Renew))))
+runs=len(list(itertools.product(INT_Demand,INT_Heat_Cool,INT_DHW,INT_Light,INT_Light_CON,INT_Plug,INT_Vent,INT_Renew)))
+print("Run length>>>",runs)
 
 def SH_Pre_Pocess(Heat_Cool):
   #This is a function to allow heating and cooling systems to be built from descrete systems or defined as a combined system   
@@ -207,6 +213,7 @@ def SH_Pre_Pocess(Heat_Cool):
 def Supply_Side(Demand,SEL_Heat_Cool,SEL_DHW,SEL_Light,SEL_Light_CON,SEL_Equip,SEL_Vent,SEL_Renew):
 
     Perm_Demand=SS_Input_Demand.iloc[Demand]
+    #Specfy pv area 
     PV_Area=80
     BuildingArea=GrossFloorArea
     
@@ -251,7 +258,7 @@ def Supply_Side(Demand,SEL_Heat_Cool,SEL_DHW,SEL_Light,SEL_Light_CON,SEL_Equip,S
     
     
     Perm_Vent={'Ref':Vent.System_Ref,'Name':Vent.Name,'Eff':Vent.Vent_Eff_Cal()}
-    Vent_Energy=Fan_Power(Perm_Vent['Eff']['SPF'],Perm_Demand['out: Fresh Air Flow Rate'])
+    Vent_Energy=Fan_Power(Perm_Vent['Eff']['SPF'],Perm_Demand['Annual Fan Power Load(kWh/m2)'])
     
     FA_Energy=Perm_Vent['Eff']['HRU']*Perm_Demand['Annual Fresh Air Load (kWh/m2)']
     
@@ -302,9 +309,13 @@ print(len(list(itertools.product(INT_Demand,INT_Heat_Cool,INT_DHW,INT_Light,INT_
 ##############################################-----------------------------------------------------------------##################################################
 
 Results=[]
+count=0
 for x in (itertools.product(INT_Demand,INT_Heat_Cool,INT_DHW,INT_Light,INT_Light_CON,INT_Plug,INT_Vent,INT_Renew)):   
+    count+=1
     DoIt=Supply_Side(x[0],x[1],x[2],x[3],x[4],x[5],x[6],x[7])
     Results.append(DoIt)
+    sg.one_line_progress_meter('Brunstwood System side',  count,runs,orientation='h',no_button=True)
+
 Results=pd.DataFrame(Results).set_index('Permutation Name')
    
 print(Results.head())
@@ -312,7 +323,7 @@ print(Results.shape[0])
 
 
 
-Results_FP=r'C:\Users\JTHOM\OneDrive - Ramboll\Documents\Dump\\Sql\\ST_James\\test.xlsx'
+Results_FP=r'C:\Users\JTHOM\OneDrive - Ramboll\Documents\GitHub\Bruntwood_V1\data\57b120e6-0e92-4ccd-b290-464769b02f7f\SS_data.xlsx'
 Results.to_excel(Results_FP,sheet_name='Results',header=True) 
-   
+Results.to_sql('users', con=engine)  
 ##############################################-----------------------------------------------------------------##################################################
