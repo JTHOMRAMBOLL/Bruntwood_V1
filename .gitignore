@@ -3,7 +3,13 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+<<<<<<< HEAD
 #sql files
+=======
+
+#sql files
+
+>>>>>>> 67d32a8cda316e45e6a4a197f9b9e8a85fc7abd8
 *.sql
 
 # C extensions
