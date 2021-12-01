@@ -201,13 +201,6 @@ def sql_Data(_data,type_):
 
 
 
-
-
-
-
-
-
-
 def Results_PP(Results_Dict,Name):
     t1=time.time()
     Results=[sql_Data(k,v) for k,v in zip(Results_Dict.values(),Results_Dict.keys())]
@@ -270,29 +263,66 @@ def extract_name(Name):
     #print(Name)
     return(Name)
 
+def Results_Hourly(Results_Dict,Name):
+    t1=time.time()
+    Results=[sql_Data(k,v) for k,v in zip(Results_Dict.values(),Results_Dict.keys())]
+    DF=pd.DataFrame(Results,index=Results_Dict.keys()).T
+    Index=pd.date_range(start='1/1/2021', periods=8760, freq='h')
+    DF=DF.set_index(Index)
+    
+    
+    
+    
+    Summed_Totals=DF#.sum()
+    Summed_Totals['out:Name']=Name
+    
+    #Fresh air load pre processing 
+    Summed_Totals["out:FA Cooling Load"]=DF["out:Mech Vent Load"].agg([pos])['pos']
+    Summed_Totals["out:FA Heating Load"]=DF["out:Mech Vent Load"].agg([neg])['neg']
+    Summed_Totals["out:FA Total Load"]=(-1*Summed_Totals["out:FA Heating Load"])+Summed_Totals["out:FA Cooling Load"]
+    #Infiltration load pre processing 
+    Summed_Totals["out:INF Cooling Load"]=DF['out: Infiltration Load'].agg([pos])['pos']
+    Summed_Totals["out:INF Heating Load"]=DF['out: Infiltration Load'].agg([neg])['neg']
+    Summed_Totals["out:INF Total Load"]=(-1*Summed_Totals["out:INF Heating Load"])+Summed_Totals["out:INF Cooling Load"]
+    
+    print(Summed_Totals)
+    
+    #Summed_Totals["out:FA Cooling Load"]=Temp["out:FA Cooling Load"]
+    #Summed_Totals["out:FA Heating Load"]=Temp["out:FA Heating Load"]
+    ict=Summed_Totals.to_dict()
+    t2=time.time()
+    print(("It takes %s seconds to extract "+Name) % (t2 - t1))
+    return(Summed_Totals)
 
-
-   
     
     print(("It takes %s seconds to upload "+Reality_Name) % (t2 - t1))
 
 
-
+#Please provide a filepath to the diretory file , which should contain the names and file paths of the sql results 
 directory_fp=r'C:\\Users\\JTHOM\\OneDrive - Ramboll\\Documents\\Dump\\Sql\\ST_James\\Directory.xlsx'
 
 DF=pd.read_excel(directory_fp)
 Names=DF['Name']
 File_Paths=DF['File_Path']
 
-FP=r'C:\\Users\\JTHOM\\OneDrive - Ramboll\\Documents\\Dump\\Sql\\ST_James\\data.xlsx'
 
+
+#Please eneter a filepath for the location of the data output from the SQL files 
+FP=r'C:\\Users\\JTHOM\\OneDrive - Ramboll\\Documents\\Dump\\Sql\\ST_James\\data.xlsx'
+#FP=r'C:\\Users\\JTHOM\\OneDrive - Ramboll\\Documents\\Dump\\Sql\\Plaza\\data.xlsx'
 #print([Name_in) for (Name_in) in zip(DF['Name'],DF['File_Path'])])
 
-test=pd.DataFrame([Results_PP(get_SQL(_sql),extract_name(Name_in)) for (Name_in,_sql) in zip(DF['Name'],DF['File_Path'])])
-test.to_excel(FP)
-print(test)
 
+Batch_Download=pd.DataFrame([Results_PP(get_SQL(_sql),extract_name(Name_in)) for (Name_in,_sql) in zip(DF['Name'],DF['File_Path'])])
+Batch_Download.to_excel(FP)
 
+#_sql_FP=r'C:\\Users\\JTHOM\\OneDrive - Ramboll\\Documents\\Dump\\Sql\\Plaza\\Plaza_000000\\116a9b0d\\outputs\\sql\\eplusout.sql'
+
+"""
+_sql_FP=r'C:\Users\JTHOM\OneDrive - Ramboll\Documents\Dump\Sql\Plaza\Plaza_000000\6d837694\outputs\sql\eplusout.sql"'
+Annual=Results_Hourly(get_SQL(_sql_FP),'Results 2')
+Annual.to_excel(FP)
+"""
 
 
 
