@@ -4,7 +4,6 @@ Created on Mon Feb 15 15:48:29 2021
 
 @author: JTHOM
 """
-
 import pandas as pd
 
 class System():
