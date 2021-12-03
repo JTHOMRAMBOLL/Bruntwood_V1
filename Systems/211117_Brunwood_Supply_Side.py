@@ -6,13 +6,14 @@ Created on Tue Jan 26 17:21:27 2021
 """
 
 # Libraries
+import feather
 import matplotlib.pyplot as plt
 import pandas as pd
 import itertools
 from Bruntwood_Systems import Get_Systems,Filter_INT
 import PySimpleGUI as sg
 from sqlalchemy import create_engine
-
+import re
 engine = create_engine('sqlite:///C:\\Users\\JTHOM\\OneDrive - Ramboll\\Documents\\GitHub\\Bruntwood_V1\\data\\57b120e6-0e92-4ccd-b290-464769b02f7f\\results.sql', echo=False)
 #################---------General Functions-------------################### 
 def percentage_change(col1,col2):
@@ -36,7 +37,16 @@ def Fan_Power(SFP,Air_Volume):
     
     return(Fan_Power)
 
-
+def fab_name(Name):
+    Code=re.split("_",Name)[2:]
+    _Wall=re.split('Wall.',Code[0])[1]
+    _Roof=re.split('Roof.',Code[1])[1]
+    _Ground_Floor=re.split('Floor.',Code[2])[1]
+    _Glazing=re.split('Glazing.',Code[3])[1]
+    _Rooflights=re.split('Rooflights.',Code[4])[1]
+    _Airtightness=re.split('Airtightness.',Code[5])[1]
+    Fab_dict={"Wall":_Wall,"Roof":_Roof,"Groud Floor":_Ground_Floor,"Glazing":_Glazing,"Rooflights":_Rooflights,"Airtightness":_Airtightness}
+    return(Fab_dict)
 
 plt.close('all')
 ############################-simulation data-###########
@@ -273,7 +283,7 @@ def Supply_Side(Demand,SEL_Heat_Cool,SEL_DHW,SEL_Light,SEL_Light_CON,SEL_Equip,S
     ST_Energy=-Perm_Renew['Yeild']['PT Yeild']
     #print(Perm_Vent['Eff']['HRU'])
     #print(Heating_Energy,Cooling_Energy,DHW_Energy,Lighting_Energy,Equip_Energy,Vent_Energy,FA_Energy,PV_Energy,ST_Energy)
- 
+    Fab_Dict=fab_name(Perm_Demand.name)
     Store=[Perm_Heat_Cool,Perm_DHW,Perm_Light,Perm_Light_CON,Perm_Equip,Perm_Vent,Perm_Renew]
     Name=('.'.join([Perm_Demand.name]+[i['Ref'] for i in Store]))
     
@@ -300,7 +310,7 @@ def Supply_Side(Demand,SEL_Heat_Cool,SEL_DHW,SEL_Light,SEL_Light_CON,SEL_Equip,S
       'Ventilation':Perm_Vent['Name'],
       'Renewables':Perm_Renew['Name'],
       }
-
+    Dict={**Dict,**Fab_Dict}
 
        
     return(Dict)
@@ -330,7 +340,7 @@ dtypes={'Annual Heating Energy (kWh/m2) ':'float64','Annual Cooling Energy (kWh/
 
 
 Results=pd.DataFrame(Results).set_index('Permutation Name')#.astype(dtype=dtypes)
-   
+
 print(Results.head())
 print(Results.shape[0])
 
@@ -339,13 +349,18 @@ print(Results.shape[0])
 
 
 
-Results_FP=r'C:\Users\JTHOM\OneDrive - Ramboll\Documents\GitHub\Bruntwood_V1\data\57b120e6-0e92-4ccd-b290-464769b02f7f\SS_data_v1.xlsx'
-Results.to_excel(Results_FP,sheet_name='Results',header=True) 
-SQL=Results.astype(dtype=dtypes)
-print(SQL.dtypes)
-SQL.to_sql('Results.db', con=engine, index_label='Permutation Name',if_exists='replace')
-df = pd.read_sql('Results.db', con=engine, index_col='Permutation Name')
+#Results_FP=r'C:\Users\JTHOM\OneDrive - Ramboll\Documents\GitHub\Bruntwood_V1\data\57b120e6-0e92-4ccd-b290-464769b02f7f\SS_data_v1.xlsx'
+#Results.to_excel(Results_FP,sheet_name='Results',header=True) 
+#SQL=Results.astype(dtype=dtypes)
+#SQL.to_sql('Results', con=engine, index_label='Permutation Name',if_exists='replace')
 
-print(df)
+ResultsFR=Results.reset_index()
+
+FFP=r'C:\\Users\\JTHOM\\OneDrive - Ramboll\\Documents\\GitHub\\Bruntwood_V1\\data\\57b120e6-0e92-4ccd-b290-464769b02f7f\\Results_St_James.feather'
+ResultsFR.to_feather(FFP)
+
+#df = pd.read_sql('Results', con=engine, index_col='Permutation Name')
+
+#print(df)
 
 ##############################################-----------------------------------------------------------------##################################################
