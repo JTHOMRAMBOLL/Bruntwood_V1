@@ -13,7 +13,7 @@ from Bruntwood_Systems import Get_Systems,Filter_INT
 import PySimpleGUI as sg
 from sqlalchemy import create_engine
 
-engine = create_engine('sqlite:///C:\\Users\\JTHOM\\OneDrive - Ramboll\\Documents\\GitHub\\Bruntwood_V1\\data\\57b120e6-0e92-4ccd-b290-464769b02f7f\\results.sql')
+engine = create_engine('sqlite:///C:\\Users\\JTHOM\\OneDrive - Ramboll\\Documents\\GitHub\\Bruntwood_V1\\data\\57b120e6-0e92-4ccd-b290-464769b02f7f\\results.sql', echo=False)
 #################---------General Functions-------------################### 
 def percentage_change(col1,col2):
     return ((col2 - col1) / col1) * 100
@@ -95,8 +95,10 @@ Total_Plot=Total_Plot/GrossFloorArea
 #print(Total_Plot['Annual Heating Load (kWh/m2)'])
 #Adjust Heating Load to suit
 Total_Plot['Annual Fresh Air Load (kWh/m2)']=Total_Plot['Annual Fresh Air Load (kWh/m2)'].abs()
+#Total_Plot['Annual Fresh Air Load (kWh/m2)']=[Vent_Eng(Weather_Data,B_FA,12.9) for B_FA in Total_Plot['out:Annual Mech Ventilation']]
+
 Total_Plot['Annual Heating Load (kWh/m2)']=Total_Plot['Annual Heating Load (kWh/m2)']-Total_Plot['Annual Fresh Air Load (kWh/m2)']
-Total_Plot['FA Percentage']=Total_Plot['Annual Fresh Air Load (kWh/m2)']/Total_Plot['Annual Heating Load (kWh/m2)']
+Total_Plot['FA Percentage']=(Total_Plot['Annual Fresh Air Load (kWh/m2)']/Total_Plot['Annual Heating Load (kWh/m2)'])*100
 
 print(Total_Plot['FA Percentage'])
 #print(Total_Plot['Annual Heating Load (kWh/m2)'])
@@ -118,17 +120,17 @@ Current='Base'
 #print(Sys_Scenario['Dummy'])
 
 
-Total_Plot['Annual Heating Load (kWh/m2)']=Total_Plot['Annual Heating Load (kWh/m2)']*Sys_Scenario[Current]['HtgEff']
-Total_Plot['Annual Cooling Load (kWh/m2)']=Total_Plot['Annual Cooling Load (kWh/m2)']*Sys_Scenario[Current]['ClgEff']
-Total_Plot['Annual Lighting Load (kWh/m2)']=Total_Plot['Annual Lighting Load (kWh/m2)']*Sys_Scenario[Current]['LghtEff']
-Total_Plot['Annual Equipment Load (kWh/m2)']=Total_Plot['Annual Equipment Load (kWh/m2)']*Sys_Scenario[Current]['FanEff']
+#Total_Plot['Annual Heating Load (kWh/m2)']=Total_Plot['Annual Heating Load (kWh/m2)']*Sys_Scenario[Current]['HtgEff']
+#Total_Plot['Annual Cooling Load (kWh/m2)']=Total_Plot['Annual Cooling Load (kWh/m2)']*Sys_Scenario[Current]['ClgEff']
+#Total_Plot['Annual Lighting Load (kWh/m2)']=Total_Plot['Annual Lighting Load (kWh/m2)']*Sys_Scenario[Current]['LghtEff']
+#Total_Plot['Annual Equipment Load (kWh/m2)']=Total_Plot['Annual Equipment Load (kWh/m2)']*Sys_Scenario[Current]['FanEff']
 
 
 #def Supply_Side_Int():
 
 ##############################################--------Supply Side Intervention Import ---------------------------##################################################
 
-FP_Supply_Side_Int=FP=r'C:\\Users\\JTHOM\\OneDrive - Ramboll\\Documents\\Dump\\Sql\\ST_James\\SJB_PC_WP2_SystemsV1.xlsx'
+FP_Supply_Side_Int=FP=r'C:\\Users\\JTHOM\\OneDrive - Ramboll\\St James_Plaza NZC MEES Consultancy\\Analysis\\NZC Pathway Models\\Python\\Systems\\SJB_PC_WP2_SystemsV1.xlsx'
 SS_INTS=Get_Systems(FP_Supply_Side_Int)
 
 
@@ -163,14 +165,14 @@ print('INT_Equip',len(EquipLoads))
 print('INT_Vent',len(Ventilation))
 print('INT_Renew',len(Renewables))
 
-INT_Demand=Demand_Scenarios#[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
-INT_Heat_Cool=list(range(0,len(Heating_Cooling),1))#len[0,1,2,3,4]
-INT_DHW=list(range(0,len(DHW_Master),1))#[0,1,2]
-INT_Light=list(range(0,len(Lighting),1))#[0,1,2,3]
-INT_Light_CON=list(range(0,len(Lighting_Cont),1))#[0,1,2]
-INT_Plug=list(range(0,len(EquipLoads),1))#[0,1]
-INT_Vent=list(range(0,len(Ventilation),1))#[0,1,2,3,4]
-INT_Renew=list(range(0,len(Renewables),1))#[0,1,2,3]
+INT_Demand=Demand_Scenarios
+INT_Heat_Cool=list(range(0,len(Heating_Cooling),1))[:2]
+INT_DHW=list(range(0,len(DHW_Master),1))[:2]
+INT_Light=list(range(0,len(Lighting),1))[:2]
+INT_Light_CON=list(range(0,len(Lighting_Cont),1))[:2]
+INT_Plug=list(range(0,len(EquipLoads),1))[:2]
+INT_Vent=list(range(0,len(Ventilation),1))[:2]
+INT_Renew=list(range(0,len(Renewables),1))[:2]
 
 runs=len(list(itertools.product(INT_Demand,INT_Heat_Cool,INT_DHW,INT_Light,INT_Light_CON,INT_Plug,INT_Vent,INT_Renew)))
 print("Run length>>>",runs)
@@ -316,14 +318,34 @@ for x in (itertools.product(INT_Demand,INT_Heat_Cool,INT_DHW,INT_Light,INT_Light
     Results.append(DoIt)
     sg.one_line_progress_meter('Brunstwood System side',  count,runs,orientation='h',no_button=True)
 
-Results=pd.DataFrame(Results).set_index('Permutation Name')
+
+
+dtypes={'Annual Heating Energy (kWh/m2) ':'float64','Annual Cooling Energy (kWh/m2)':'float64',
+      'Annual Lighting Energy (kWh/m2)':'float64','Annual Equipment Energy (kWh/m2)':'float64','Annual DHW Energy (kWh/m2)':'float64','Annual Fresh Air Energy (kWh/m2)':'float64','Annual Fan Power Load(kWh/m2)':'float64',
+      'Annual PV Energy (kWh/m2) ':'float64','Annual ST Energy (kWh/m2) ':'float64','Total Annual Energy (kWh/m2)':'float64','Fabric Intervention:':'object',
+      'Heating & Cooling Plant':'object','DHW':'object','Lighting':'object','Lighting Control':'object','Lighting Equiptment':'object','Ventilation':'object','Renewables':'object',
+      }
+
+
+
+
+Results=pd.DataFrame(Results).set_index('Permutation Name')#.astype(dtype=dtypes)
    
 print(Results.head())
 print(Results.shape[0])
 
 
 
-Results_FP=r'C:\Users\JTHOM\OneDrive - Ramboll\Documents\GitHub\Bruntwood_V1\data\57b120e6-0e92-4ccd-b290-464769b02f7f\SS_data.xlsx'
+
+
+
+Results_FP=r'C:\Users\JTHOM\OneDrive - Ramboll\Documents\GitHub\Bruntwood_V1\data\57b120e6-0e92-4ccd-b290-464769b02f7f\SS_data_v1.xlsx'
 Results.to_excel(Results_FP,sheet_name='Results',header=True) 
-Results.to_sql('users', con=engine)  
+SQL=Results.astype(dtype=dtypes)
+print(SQL.dtypes)
+SQL.to_sql('Results.db', con=engine, index_label='Permutation Name',if_exists='replace')
+df = pd.read_sql('Results.db', con=engine, index_col='Permutation Name')
+
+print(df)
+
 ##############################################-----------------------------------------------------------------##################################################
