@@ -80,12 +80,14 @@ class SystemPD():
        # EFF_Out=self.Eff_Out
         Elec_Yeild_Out='N/A'
         DHW_Yeild_Out='N/A'
+        Wind_Yeild_Out='N/A'
         
         if self.System_Type=='Renewable':
             Elec_Yeild_Out=self.Efficency['Electrical Yeild']*PV_Area/BuildingArea
             DHW_Yeild_Out=self.Efficency['DHW Yeild']*PV_Area/BuildingArea
+            Wind_Yeild_Out=self.Efficency['Electrical Yeild']/BuildingArea
             #EFF_Out=self.Efficency['Efficency']
-        Renew_Metrics={'PV Yeild':Elec_Yeild_Out.values[0],'PT Yeild':DHW_Yeild_Out.values[0]}
+        Renew_Metrics={'PV Yeild':Elec_Yeild_Out.values[0],'PT Yeild':DHW_Yeild_Out.values[0],'Wind Yeild':Wind_Yeild_Out.values[0]}
         return(Renew_Metrics)
 
     def HC_Eff(self):
@@ -146,9 +148,10 @@ def Filter_INT(SS_Ints,SearchTerm):
     return(Filter_Type)
 
 
-FP_Supply_Side_Int=FP=r'C:\\Users\\JTHOM\\OneDrive - Ramboll\\Documents\\Dump\\Sql\\ST_James\\SJB_PC_WP2_SystemsV1.xlsx'
-SS_INTS=Get_Systems(FP_Supply_Side_Int)
-print(SS_INTS[0])
-Test=Filter_INT(SS_INTS[0],'Heating&Cooling')[0].Mean_Eff()
-print(Test)
+#FP_Supply_Side_Int=FP=r'C:\Users\JTHOM\OneDrive - Ramboll\St James_Plaza NZC MEES Consultancy\Analysis\NZC Pathway Models\Python\Systems\SJB_PC_WP2_SystemsV1.xlsx'
+#SS_INTS=Get_Systems(FP_Supply_Side_Int)
+#print(SS_INTS[0])
+#Test=Filter_INT(SS_INTS[0],'Renewable')[2].Renew(80,3000)
+#print(Test)
 
+    

@@ -38,13 +38,17 @@ def Fan_Power(SFP,Air_Volume):
     return(Fan_Power)
 
 def fab_name(Name):
+    
+    New_Name={'Basecase':'Existing','Regs':'NZC','Pilot':'NZC Enhanced'}
+    
+    
     Code=re.split("_",Name)[2:]
-    _Wall=re.split('Wall.',Code[0])[1]
-    _Roof=re.split('Roof.',Code[1])[1]
-    _Ground_Floor=re.split('Floor.',Code[2])[1]
-    _Glazing=re.split('Glazing.',Code[3])[1]
-    _Rooflights=re.split('Rooflights.',Code[4])[1]
-    _Airtightness=re.split('Airtightness.',Code[5])[1]
+    _Wall=New_Name[re.split('Wall.',Code[0])[1]]
+    _Roof=New_Name[re.split('Roof.',Code[1])[1]]
+    _Ground_Floor=New_Name[re.split('Floor.',Code[2])[1]]
+    _Glazing=New_Name[re.split('Glazing.',Code[3])[1]]
+    _Rooflights=New_Name[re.split('Rooflights.',Code[4])[1]]
+    _Airtightness=New_Name[re.split('Airtightness.',Code[5])[1]]
     Fab_dict={"Wall":_Wall,"Roof":_Roof,"Groud Floor":_Ground_Floor,"Glazing":_Glazing,"Rooflights":_Rooflights,"Airtightness":_Airtightness}
     return(Fab_dict)
 
@@ -162,9 +166,9 @@ EquipLoads=Filter_INT(SS_INTS[0],'PlugLoads')
 Ventilation=Filter_INT(SS_INTS[0],'Ventilation') 
 Renewables=Filter_INT(SS_INTS[0],'Renewable')
 
-print(Renewables[1].Renew(80,GrossFloorArea))
-print(len(Heating))
-print(len(Cooling))
+#print(Renewables[1].Renew(80,GrossFloorArea))
+#print(len(Heating))
+#print(len(Cooling))
 print('Descrete interventions')
 print('INT_Heat_Cool',len(Heating_Cooling))
 print('INT_DHW',len(DHW_Master))

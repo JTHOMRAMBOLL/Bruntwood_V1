@@ -162,6 +162,7 @@ Lighting_Cont=Filter_INT(SS_INTS[0],'Lighting Control')
 EquipLoads=Filter_INT(SS_INTS[0],'PlugLoads')
 Ventilation=Filter_INT(SS_INTS[0],'Ventilation') 
 Renewables=Filter_INT(SS_INTS[0],'Renewable')
+AirCurtain=Filter_INT(SS_INTS[0],'Air Curtain')
 
 print(Renewables[1].Renew(80,GrossFloorArea))
 print(len(Heating))
@@ -174,6 +175,8 @@ print('INT_Light_CON',len(Lighting_Cont))
 print('INT_Equip',len(EquipLoads))
 print('INT_Vent',len(Ventilation))
 print('INT_Renew',len(Renewables))
+print('INT_AIR_CURTAIN',len(AirCurtain))
+
 
 INT_Demand=Demand_Scenarios
 INT_Heat_Cool=list(range(0,len(Heating_Cooling),1))[:2]
@@ -183,6 +186,7 @@ INT_Light_CON=list(range(0,len(Lighting_Cont),1))[:2]
 INT_Plug=list(range(0,len(EquipLoads),1))[:2]
 INT_Vent=list(range(0,len(Ventilation),1))[:2]
 INT_Renew=list(range(0,len(Renewables),1))[:2]
+
 
 runs=len(list(itertools.product(INT_Demand,INT_Heat_Cool,INT_DHW,INT_Light,INT_Light_CON,INT_Plug,INT_Vent,INT_Renew)))
 print("Run length>>>",runs)
