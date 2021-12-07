@@ -69,13 +69,18 @@ AC_SPLIT=0.2
 
 
 #Totals_FP=r'\\UKrammanfiler01\Projects\1620010755\05-Analysis\Sustainability Solutions\BEAR\Results\210617_Complex\data.xlsx'
+<<<<<<< Updated upstream
 Totals_FP=r'C:\\Users\\JTHOM\\OneDrive - Ramboll\\St James_Plaza NZC MEES Consultancy\\Analysis\\NZC Pathway Models\\Plaza\\Passive Data\\data.xlsx'
 Weather_FP=r'\\UKrammanfiler01\\Projects\\1620010755\\05-Analysis\\Sustainability Solutions\\BEAR\\Results\\210617_Complex\\Trafford_House_WeatherData.xlsx'
+=======
+Totals_FP=r'C:\\Users\\ESENO\\OneDrive - Ramboll\\Projects\\StJames_&_ThePlaza\\Plaza\\SQL\\data.xlsx'
+#Weather_FP=r'\\UKrammanfiler01\\Projects\\1620010755\\05-Analysis\\Sustainability Solutions\\BEAR\\Results\\210617_Complex\\Trafford_House_WeatherData.xlsx'
+>>>>>>> Stashed changes
 
 
 #Main Data impoirt of the Demand side scenarios
 Totals_Data=pd.read_excel(Totals_FP)#.dropna().drop_duplicates(keep='first')
-Weather_Data=pd.read_excel(Weather_FP,index_col=0)#.dropna().drop_duplicates(keep='first')
+#Weather_Data=pd.read_excel(Weather_FP,index_col=0)#.dropna().drop_duplicates(keep='first')
 #print(Weather_Data)
 
 
@@ -149,7 +154,7 @@ Current='Base'
 
 ##############################################--------Supply Side Intervention Import ---------------------------##################################################
 
-FP_Supply_Side_Int=FP=r'C:\\Users\\JTHOM\\OneDrive - Ramboll\\St James_Plaza NZC MEES Consultancy\\Analysis\\NZC Pathway Models\\Python\\Systems\\Plaza_LC_WP2_SystemsV1.xlsx'
+FP_Supply_Side_Int=FP=r'C:\\Users\\ESENO\\OneDrive - Ramboll\\St James_Plaza NZC MEES Consultancy\\Analysis\\NZC Pathway Models\\Python\\Systems\\Plaza_LC_WP2_SystemsV1.xlsx'
 SS_INTS=Get_Systems(FP_Supply_Side_Int)
 
 
@@ -379,7 +384,7 @@ print(Results.shape[0])
 
 ResultsFR=Results.reset_index()
 
-FFP=r'C:\\Users\\JTHOM\\OneDrive - Ramboll\\Documents\\GitHub\\Bruntwood_V1\\data\\57b120e6-0e92-4ccd-b290-464769b02f7f\\Results_Plaza.feather'
+FFP=r'C:\\Users\\ESENO\\OneDrive - Ramboll\\Projects\\StJames_&_ThePlaza\\Plaza\\Results\\results.feather'
 ResultsFR.to_feather(FFP)
 
 #df = pd.read_sql('Results', con=engine, index_col='Permutation Name')

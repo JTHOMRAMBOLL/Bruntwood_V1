@@ -148,10 +148,10 @@ def Filter_INT(SS_Ints,SearchTerm):
     return(Filter_Type)
 
 
-#FP_Supply_Side_Int=FP=r'C:\Users\JTHOM\OneDrive - Ramboll\St James_Plaza NZC MEES Consultancy\Analysis\NZC Pathway Models\Python\Systems\SJB_PC_WP2_SystemsV1.xlsx'
-#SS_INTS=Get_Systems(FP_Supply_Side_Int)
-#print(SS_INTS[0])
-#Test=Filter_INT(SS_INTS[0],'Renewable')[2].Renew(80,3000)
-#print(Test)
+FP_Supply_Side_Int=FP=r'C:\\Users\\ESENO\\OneDrive - Ramboll\\St James_Plaza NZC MEES Consultancy\\Analysis\\NZC Pathway Models\\Python\\Systems\\Plaza_LC_WP2_SystemsV1.xlsx'
+SS_INTS=Get_Systems(FP_Supply_Side_Int)
+print(SS_INTS[0])
+Test=Filter_INT(SS_INTS[0],'Heating&Cooling')[0].Mean_Eff()
+print(Test)
 
     
