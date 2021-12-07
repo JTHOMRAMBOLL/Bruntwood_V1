@@ -11,6 +11,7 @@ __pycache__/
 
 >>>>>>> 67d32a8cda316e45e6a4a197f9b9e8a85fc7abd8
 *.sql
+*.feather
 
 # C extensions
 *.so
