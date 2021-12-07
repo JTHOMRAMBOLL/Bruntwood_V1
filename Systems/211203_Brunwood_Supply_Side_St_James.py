@@ -67,7 +67,7 @@ FA_SPlit=0.55
 
 
 #Totals_FP=r'\\UKrammanfiler01\Projects\1620010755\05-Analysis\Sustainability Solutions\BEAR\Results\210617_Complex\data.xlsx'
-Totals_FP=r'C:\\Users\\JTHOM\\OneDrive - Ramboll\\Documents\\GitHub\\Bruntwood_V1\\data\\57b120e6-0e92-4ccd-b290-464769b02f7f\\data.xlsx'
+Totals_FP=r'C:\\Users\\JTHOM\\OneDrive - Ramboll\\St James_Plaza NZC MEES Consultancy\\Analysis\\NZC Pathway Models\\St James\\Passive Data\\St_James_data.xlsx'
 Weather_FP=r'\\UKrammanfiler01\\Projects\\1620010755\\05-Analysis\\Sustainability Solutions\\BEAR\\Results\\210617_Complex\\Trafford_House_WeatherData.xlsx'
 
 
@@ -108,9 +108,12 @@ Total_Plot=Total_Plot/GrossFloorArea
 
 #print(Total_Plot['Annual Heating Load (kWh/m2)'])
 #Adjust Heating Load to suit
-Total_Plot['Annual Fresh Air Load (kWh/m2)']=Total_Plot['Annual Heating Load (kWh/m2)']*FA_SPlit
+#Total_Plot['Annual Fresh Air Load (kWh/m2)']=Total_Plot['Annual Heating Load (kWh/m2)']*FA_SPlit
+Total_Plot['Annual Fresh Air Load (kWh/m2)']=Total_Plot['Annual Fresh Air Load (kWh/m2)'].abs()
+Total_Plot['Annual Heating Load (kWh/m2)']=Total_Plot['Annual Heating Load (kWh/m2)']+Total_Plot['Annual Fresh Air Load (kWh/m2)']
+#Total_Plot['Annual Heating Load (kWh/m2)']=Total_Plot['Annual Heating Load (kWh/m2)']*(1-FA_SPlit)
 
-Total_Plot['Annual Heating Load (kWh/m2)']=Total_Plot['Annual Heating Load (kWh/m2)']*(1-FA_SPlit)
+
 Total_Plot['FA Percentage']=(Total_Plot['Annual Fresh Air Load (kWh/m2)']/Total_Plot['Annual Heating Load (kWh/m2)'])*100
 
 print(Total_Plot['FA Percentage'])
