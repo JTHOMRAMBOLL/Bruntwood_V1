@@ -312,7 +312,7 @@ def Supply_Side(Demand,SEL_Heat_Cool,SEL_DHW,SEL_Light,SEL_Light_CON,SEL_Equip,S
     #print(Perm_Vent['Eff']['HRU'])
     #print(Heating_Energy,Cooling_Energy,DHW_Energy,Lighting_Energy,Equip_Energy,Vent_Energy,FA_Energy,PV_Energy,ST_Energy)
  
-    Store=[Perm_Heat_Cool,Perm_AirCur,Perm_DHW,Perm_Light,Perm_Light_CON,Perm_Equip,Perm_Vent,Perm_Renew]
+    Store=[Perm_Heat_Cool,Perm_AirCur,Perm_DHW,Perm_Light,Perm_Light_CON,Perm_Equip,Perm_Vent,Perm_Renew,Perm_FAsys]
     Fab_Dict=fab_name(Perm_Demand.name)
     Name=('.'.join([Perm_Demand.name]+[i['Ref'] for i in Store]))
     
@@ -346,7 +346,7 @@ def Supply_Side(Demand,SEL_Heat_Cool,SEL_DHW,SEL_Light,SEL_Light_CON,SEL_Equip,S
     #print(Dict)
        
     return(Dict)
-test=Supply_Side(0,0,0,0,0,0,0,0,0)
+test=Supply_Side(0,0,0,0,0,0,0,0,0,0)
 print(test)
 print(len(list(itertools.product(INT_Demand,INT_Heat_Cool,INT_DHW,INT_Light,INT_Light_CON,INT_Plug,INT_Vent,INT_Renew,INT_AIR_CURTAIN,INT_FA_SYSTEM))))
 
