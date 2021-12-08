@@ -69,14 +69,9 @@ AC_SPLIT=0.2
 
 
 #Totals_FP=r'\\UKrammanfiler01\Projects\1620010755\05-Analysis\Sustainability Solutions\BEAR\Results\210617_Complex\data.xlsx'
-<<<<<<< Updated upstream
+
 Totals_FP=r'C:\\Users\\JTHOM\\OneDrive - Ramboll\\St James_Plaza NZC MEES Consultancy\\Analysis\\NZC Pathway Models\\Plaza\\Passive Data\\data.xlsx'
 Weather_FP=r'\\UKrammanfiler01\\Projects\\1620010755\\05-Analysis\\Sustainability Solutions\\BEAR\\Results\\210617_Complex\\Trafford_House_WeatherData.xlsx'
-=======
-Totals_FP=r'C:\\Users\\ESENO\\OneDrive - Ramboll\\Projects\\StJames_&_ThePlaza\\Plaza\\SQL\\data.xlsx'
-#Weather_FP=r'\\UKrammanfiler01\\Projects\\1620010755\\05-Analysis\\Sustainability Solutions\\BEAR\\Results\\210617_Complex\\Trafford_House_WeatherData.xlsx'
->>>>>>> Stashed changes
-
 
 #Main Data impoirt of the Demand side scenarios
 Totals_Data=pd.read_excel(Totals_FP)#.dropna().drop_duplicates(keep='first')
@@ -154,7 +149,7 @@ Current='Base'
 
 ##############################################--------Supply Side Intervention Import ---------------------------##################################################
 
-FP_Supply_Side_Int=FP=r'C:\\Users\\ESENO\\OneDrive - Ramboll\\St James_Plaza NZC MEES Consultancy\\Analysis\\NZC Pathway Models\\Python\\Systems\\Plaza_LC_WP2_SystemsV1.xlsx'
+FP_Supply_Side_Int=FP=r'C:\\Users\\JTHOM\\OneDrive - Ramboll\\St James_Plaza NZC MEES Consultancy\\Analysis\\NZC Pathway Models\\Python\\Systems\\Plaza_LC_WP2_SystemsV1.xlsx'
 SS_INTS=Get_Systems(FP_Supply_Side_Int)
 
 
@@ -177,6 +172,8 @@ EquipLoads=Filter_INT(SS_INTS[0],'PlugLoads')
 Ventilation=Filter_INT(SS_INTS[0],'Ventilation') 
 Renewables=Filter_INT(SS_INTS[0],'Renewable')
 AirCurtain=Filter_INT(SS_INTS[0],'Air Curtain')
+FASystem=Filter_INT(SS_INTS[0],'FA System')
+
 
 print(Renewables[1].Renew(80,GrossFloorArea))
 print(len(Heating))
@@ -190,6 +187,8 @@ print('INT_Equip',len(EquipLoads))
 print('INT_Vent',len(Ventilation))
 print('INT_Renew',len(Renewables))
 print('INT_AIR_CURTAIN',len(AirCurtain))
+print('INT_FA_SYSTEM',len(FASystem))
+
 #test
 INT_Demand=Demand_Scenarios
 INT_Heat_Cool=list(range(0,len(Heating_Cooling),1))#[:2]
@@ -200,8 +199,10 @@ INT_Plug=list(range(0,len(EquipLoads),1))#[:2]
 INT_Vent=list(range(0,len(Ventilation),1))#[:2]
 INT_Renew=list(range(0,len(Renewables),1))#[:2]
 INT_AIR_CURTAIN=list(range(0,len(AirCurtain),1))#[:2]
+INT_FA_SYSTEM=list(range(0,len(FASystem),1))#[:2]
 
-runs=len(list(itertools.product(INT_Demand,INT_Heat_Cool,INT_DHW,INT_Light,INT_Light_CON,INT_Plug,INT_Vent,INT_Renew,INT_AIR_CURTAIN)))
+
+runs=len(list(itertools.product(INT_Demand,INT_Heat_Cool,INT_DHW,INT_Light,INT_Light_CON,INT_Plug,INT_Vent,INT_Renew,INT_AIR_CURTAIN,INT_FA_SYSTEM)))
 print("Run length>>>",runs)
 
 def SH_Pre_Pocess(Heat_Cool):
@@ -239,7 +240,7 @@ def SH_Pre_Pocess(Heat_Cool):
 
 
    
-def Supply_Side(Demand,SEL_Heat_Cool,SEL_DHW,SEL_Light,SEL_Light_CON,SEL_Equip,SEL_Vent,SEL_Renew,SEL_Air_Curtain):
+def Supply_Side(Demand,SEL_Heat_Cool,SEL_DHW,SEL_Light,SEL_Light_CON,SEL_Equip,SEL_Vent,SEL_Renew,SEL_Air_Curtain,SEL_FA_Sys):
 
     Perm_Demand=SS_Input_Demand.iloc[Demand]
     #Specfy pv area 
@@ -254,7 +255,7 @@ def Supply_Side(Demand,SEL_Heat_Cool,SEL_DHW,SEL_Light,SEL_Light_CON,SEL_Equip,S
     Vent=Ventilation[SEL_Vent]
     Renew=Renewables[SEL_Renew]
     AirCur=AirCurtain[SEL_Air_Curtain]
-    
+    FAsys=FASystem[SEL_FA_Sys]
     
     
     Perm_Heat_Cool=SH_Pre_Pocess(Heat_Cool)#Function gives Name and Eff
@@ -292,7 +293,9 @@ def Supply_Side(Demand,SEL_Heat_Cool,SEL_DHW,SEL_Light,SEL_Light_CON,SEL_Equip,S
     Perm_Vent={'Ref':Vent.System_Ref,'Name':Vent.Name,'Eff':Vent.Vent_Eff_Cal()}
     Vent_Energy=Fan_Power(Perm_Vent['Eff']['SPF'],Perm_Demand['Annual Fan Power Load(kWh/m2)'])
     
-    FA_Energy=Perm_Vent['Eff']['HRU']*Perm_Demand['Annual Fresh Air Load (kWh/m2)']
+    Perm_FAsys={'Ref':FAsys.System_Ref,'Name':FAsys.Name,'Eff':FAsys.Mean_Eff()}
+    
+    FA_Energy=(Perm_Vent['Eff']['HRU']*Perm_Demand['Annual Fresh Air Load (kWh/m2)'])*Perm_FAsys['Eff']
     
     
     
@@ -314,7 +317,7 @@ def Supply_Side(Demand,SEL_Heat_Cool,SEL_DHW,SEL_Light,SEL_Light_CON,SEL_Equip,S
     Name=('.'.join([Perm_Demand.name]+[i['Ref'] for i in Store]))
     
     
-    Total=sum([Heating_Energy,Cooling_Energy,Lighting_Energy,Equip_Energy,DHW_Energy,FA_Energy,AIR_Curtain_Energy,Vent_Energy,PV_Energy,ST_Energy])
+    Total=sum([Heating_Energy,Cooling_Energy,Lighting_Energy,Equip_Energy,DHW_Energy,FA_Energy,AIR_Curtain_Energy,Vent_Energy,PV_Energy,ST_Energy,Wind_Energy])
 
     Dict={'Permutation Name':Name,
       'Annual Heating Energy (kWh/m2) ':Heating_Energy,
@@ -331,6 +334,7 @@ def Supply_Side(Demand,SEL_Heat_Cool,SEL_DHW,SEL_Light,SEL_Light_CON,SEL_Equip,S
       'Fabric Intervention:':Perm_Demand.name,
       'Heating & Cooling Plant':Perm_Heat_Cool['Name'],
       'Air Curtain Plant':Perm_AirCur['Name'],
+      'Fresh Air Plant':Perm_FAsys['Name'],
       'DHW':Perm_DHW['Name'],
       'Lighting':Perm_Light['Name'],
       'Lighting Control':Perm_Light_CON['Name'],
@@ -344,15 +348,15 @@ def Supply_Side(Demand,SEL_Heat_Cool,SEL_DHW,SEL_Light,SEL_Light_CON,SEL_Equip,S
     return(Dict)
 test=Supply_Side(0,0,0,0,0,0,0,0,0)
 print(test)
-print(len(list(itertools.product(INT_Demand,INT_Heat_Cool,INT_DHW,INT_Light,INT_Light_CON,INT_Plug,INT_Vent,INT_Renew,INT_AIR_CURTAIN))))
+print(len(list(itertools.product(INT_Demand,INT_Heat_Cool,INT_DHW,INT_Light,INT_Light_CON,INT_Plug,INT_Vent,INT_Renew,INT_AIR_CURTAIN,INT_FA_SYSTEM))))
 
 ##############################################-----------------------------------------------------------------##################################################
 
 Results=[]
 count=0
-for x in (itertools.product(INT_Demand,INT_Heat_Cool,INT_DHW,INT_Light,INT_Light_CON,INT_Plug,INT_Vent,INT_Renew,INT_AIR_CURTAIN)):   
+for x in (itertools.product(INT_Demand,INT_Heat_Cool,INT_DHW,INT_Light,INT_Light_CON,INT_Plug,INT_Vent,INT_Renew,INT_AIR_CURTAIN,INT_FA_SYSTEM)):   
     count+=1
-    DoIt=Supply_Side(x[0],x[1],x[2],x[3],x[4],x[5],x[6],x[7],x[8])
+    DoIt=Supply_Side(x[0],x[1],x[2],x[3],x[4],x[5],x[6],x[7],x[8],x[9])
     Results.append(DoIt)
     sg.one_line_progress_meter('Brunstwood System side',  count,runs,orientation='h',no_button=True)
 
@@ -381,10 +385,9 @@ print(Results.shape[0])
 #Results.to_excel(Results_FP,sheet_name='Results',header=True) 
 #SQL=Results.astype(dtype=dtypes)
 #SQL.to_sql('Results', con=engine, index_label='Permutation Name',if_exists='replace')
-
 ResultsFR=Results.reset_index()
 
-FFP=r'C:\\Users\\ESENO\\OneDrive - Ramboll\\Projects\\StJames_&_ThePlaza\\Plaza\\Results\\results.feather'
+FFP=r'C:\\Users\\JTHOM\\OneDrive - Ramboll\\Documents\\GitHub\\Bruntwood_V1\\data\\57b120e6-0e92-4ccd-b290-464769b02f7f\\Results_Plaza.feather'
 ResultsFR.to_feather(FFP)
 
 #df = pd.read_sql('Results', con=engine, index_col='Permutation Name')

@@ -67,7 +67,7 @@ FA_SPlit=0.55
 
 
 #Totals_FP=r'\\UKrammanfiler01\Projects\1620010755\05-Analysis\Sustainability Solutions\BEAR\Results\210617_Complex\data.xlsx'
-Totals_FP=r'C:\\Users\\JTHOM\\OneDrive - Ramboll\\St James_Plaza NZC MEES Consultancy\\Analysis\\NZC Pathway Models\\St James\\Passive Data\\St_James_data.xlsx'
+Totals_FP=r'C:\\Users\\JTHOM\\OneDrive - Ramboll\\St James_Plaza NZC MEES Consultancy\\Analysis\\NZC Pathway Models\\St James\\Passive Data\\St_James_data_ANB.xlsx'
 Weather_FP=r'\\UKrammanfiler01\\Projects\\1620010755\\05-Analysis\\Sustainability Solutions\\BEAR\\Results\\210617_Complex\\Trafford_House_WeatherData.xlsx'
 
 
@@ -103,14 +103,19 @@ Total_Plot=Total_Plot/GrossFloorArea
 
 
 #Post Process the Fresh Air Load 
-#Total_Plot['Annual Fresh Air Load (kWh/m2)']=[Vent_Eng(Weather_Data,B_FA,12.9) for B_FA in Total_Plot['out: Fresh Air Flow Rate']]
+Total_Plot['Annual Fresh Air Load (kWh/m2)']=[Vent_Eng(Weather_Data,B_FA,14) for B_FA in Total_Plot['out:Annual Mech Ventilation']]
 
 
 #print(Total_Plot['Annual Heating Load (kWh/m2)'])
 #Adjust Heating Load to suit
 #Total_Plot['Annual Fresh Air Load (kWh/m2)']=Total_Plot['Annual Heating Load (kWh/m2)']*FA_SPlit
-Total_Plot['Annual Fresh Air Load (kWh/m2)']=Total_Plot['Annual Fresh Air Load (kWh/m2)'].abs()
-Total_Plot['Annual Heating Load (kWh/m2)']=Total_Plot['Annual Heating Load (kWh/m2)']+Total_Plot['Annual Fresh Air Load (kWh/m2)']
+#Total_Plot['Annual Fresh Air Load (kWh/m2)']=Total_Plot['Annual Fresh Air Load (kWh/m2)'].abs()
+
+#Total_Plot['Annual Fresh Air Load (kWh/m2)']=(Total_Plot['Annual Heating Load (kWh/m2)']*FA_SPlit)
+
+#Total_Plot['Annual Heating Load (kWh/m2)']=Total_Plot['Annual Heating Load (kWh/m2)']*(1-FA_SPlit)
+
+Total_Plot['Annual Heating Load (kWh/m2)']=Total_Plot['Annual Heating Load (kWh/m2)']-Total_Plot['Annual Fresh Air Load (kWh/m2)']
 #Total_Plot['Annual Heating Load (kWh/m2)']=Total_Plot['Annual Heating Load (kWh/m2)']*(1-FA_SPlit)
 
 
@@ -278,11 +283,9 @@ def Supply_Side(Demand,SEL_Heat_Cool,SEL_DHW,SEL_Light,SEL_Light_CON,SEL_Equip,S
     Perm_Vent={'Ref':Vent.System_Ref,'Name':Vent.Name,'Eff':Vent.Vent_Eff_Cal()}
     Vent_Energy=Fan_Power(Perm_Vent['Eff']['SPF'],Perm_Demand['Annual Fan Power Load(kWh/m2)'])
     
-    FA_Energy=Perm_Vent['Eff']['HRU']*Perm_Demand['Annual Fresh Air Load (kWh/m2)']
+    FA_Energy=(Perm_Vent['Eff']['HRU']*Perm_Demand['Annual Fresh Air Load (kWh/m2)'])*Perm_Heat_Cool['Eff']['HTG_Eff']
     
     
-    
-
     Perm_Renew={'Ref':Renew.System_Ref,'Name':Renew.Name,'Yeild':Renew.Renew(PV_Area,BuildingArea)}
     
     PV_Energy=-Perm_Renew['Yeild']['PV Yeild']
