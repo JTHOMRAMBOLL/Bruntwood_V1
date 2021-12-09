@@ -56,6 +56,7 @@ def fab_name(Name):
     
     
     Code=re.split("_",Name)[2:]
+
     _Wall=New_Name[re.split('Wall.',Code[0])[1]]
     _Roof=New_Name[re.split('Roof.',Code[1])[1]]
     _Ground_Floor=New_Name[re.split('Floor.',Code[2])[1]]
@@ -76,7 +77,7 @@ Building_FA_Volume=6.928416
 Model_Mass_Flow=9
 #Floor_Area=1197.73# post process small power loads 
 Baseline_SFP=1.6#To be confirmed 
-FA_SPlit=0.6
+FA_SPlit=0.4
 
 
 #Totals_FP=r'\\UKrammanfiler01\Projects\1620010755\05-Analysis\Sustainability Solutions\BEAR\Results\210617_Complex\data.xlsx'
@@ -116,24 +117,29 @@ Total_Plot=Total_Plot/GrossFloorArea
 
 
 #Post Process the Fresh Air Load 
-#Total_Plot['Annual Fresh Air Load (kWh/m2)']=[Vent_Eng(Weather_Data,B_FA,10) for B_FA in Total_Plot['out:Annual Mech Ventilation']]
+#Total_Plot['Annual Fresh Air Load (kWh/m2)']=[Vent_Eng(Weather_Data,B_FA,14) for B_FA in Total_Plot['out:Annual Mech Ventilation']]
 #Total_Plot['Annual Fresh Air Load (kWh/m2)']=Vent_EngV1(Weather_Data,Building_FA_Volume,12.9,GrossFloorArea)
 
 #print(Total_Plot['Annual Heating Load (kWh/m2)'])
 #Adjust Heating Load to suit
-#Total_Plot['Annual Fresh Air Load (kWh/m2)']=Total_Plot['Annual Heating Load (kWh/m2)']*FA_SPlit
-Total_Plot['Annual Fresh Air Load (kWh/m2)']=Total_Plot['Annual Fresh Air Load (kWh/m2)'].abs()
+Total_Plot['Annual Fresh Air Load (kWh/m2)']=Total_Plot['Annual Heating Load (kWh/m2)'].iloc[0]*FA_SPlit
+#Total_Plot['Annual Fresh Air Load (kWh/m2)']=Total_Plot['Annual Fresh Air Load (kWh/m2)'].abs()
 
 #Total_Plot['Annual Fresh Air Load (kWh/m2)']=(Total_Plot['Annual Heating Load (kWh/m2)']*FA_SPlit)
 
 #Total_Plot['Annual Heating Load (kWh/m2)']=Total_Plot['Annual Heating Load (kWh/m2)']*(1-FA_SPlit)
 Total_Plot['FA Percentage']=(Total_Plot['Annual Fresh Air Load (kWh/m2)']/Total_Plot['Annual Heating Load (kWh/m2)'])*100
-Total_Plot['Annual Heating Load (kWh/m2)']=Total_Plot['Annual Heating Load (kWh/m2)']+Total_Plot['Annual Fresh Air Load (kWh/m2)']*FA_SPlit
+Total_Plot['Annual Heating Load (kWh/m2)']=Total_Plot['Annual Heating Load (kWh/m2)']+Total_Plot['Annual Fresh Air Load (kWh/m2)']
+
+#Total_Plot['Annual Fresh Air Load (kWh/m2)']=Total_Plot['Annual Heating Load (kWh/m2)']*FA_SPlit
+#Total_Plot['Annual Heating Load (kWh/m2)']=Total_Plot['Annual Fresh Air Load (kWh/m2)']*(1-FA_SPlit)
+
 #Total_Plot['Annual Heating Load (kWh/m2)']=Total_Plot['Annual Heating Load (kWh/m2)']*(1-FA_SPlit)
 
 
 #Total_Plot['FA Percentage']=(Total_Plot['Annual Fresh Air Load (kWh/m2)']/Total_Plot['Annual Heating Load (kWh/m2)'])*100
-
+print(">>>>>>>>>>",Total_Plot['Annual Fresh Air Load (kWh/m2)'])
+print(">>>>>>>>>>",Total_Plot['Annual Heating Load (kWh/m2)'])
 print(">>>>>>>>>>",Total_Plot['FA Percentage'])
 #print(Total_Plot['Annual Heating Load (kWh/m2)'])
 #Post Processed Fans Load 
