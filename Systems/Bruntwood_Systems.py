@@ -70,7 +70,7 @@ class SystemPD():
             
             
             SPF_Out=self.Efficency['SFP'].mean(axis = 0)
-            HRU_Out=self.Efficency['HRU'].mean(axis = 0)
+            HRU_Out=(1-self.Efficency['HRU'].mean(axis = 0))
            
         Eff_Metrics={'SPF':SPF_Out,'HRU':HRU_Out,'EFF':EFF_Out}
             
