@@ -65,7 +65,12 @@ Model_Mass_Flow=7.108677
 Baseline_SFP=1.6#To be confirmed 
 #Fresh are split as per the calibration Model
 FA_SPlit=0.75
-AC_SPLIT=0.2
+
+#Air curtain load is to be counted for from engineering observations and assumptions on the project file path below to calculation 
+#https://ramboll.sharepoint.com/:x:/r/sites/RUKSustainability/Shared%20Documents/General/Projects/St%20James_Plaza%20NZC%20MEES%20Consultancy/Building%20Information
+# /The%20Plaza/AHU%20Heat%20recovery%20and%20Overdoor%20heaters%20calcs.xlsx?d=w410508daa04142aeaa540fb1790ea1d7&csf=1&web=1&e=AJsHyS
+ODH=25872 # Overdoor heater kwh/yr 
+#AC_SPLIT=0.2 SS by hand calc figure
 
 
 #Totals_FP=r'\\UKrammanfiler01\Projects\1620010755\05-Analysis\Sustainability Solutions\BEAR\Results\210617_Complex\data.xlsx'
@@ -93,13 +98,13 @@ Demand_Scenarios=range(Total_Plot.shape[0])
 print(Demand_Scenarios)
 print("Demand Scenario length= " +str(Total_Plot.shape[0]))
 
-
+Total_Plot['Annual Air Curtain Load (kWh/m2)']=ODH
 
 #Sorting preferences 
 #Total_Plot=Total_Plot.sort_values(by=['Total Energy (kwh/m2)'], ascending=[True])
 #Total_Plot=Total_Plot.sort_values(by=['Annual Heating Load (kWh/m2)'], ascending=[True])
 Total_Plot=Total_Plot/GrossFloorArea
-
+print(Total_Plot['Annual Air Curtain Load (kWh/m2)'])
 #Post Process the Small Power 
 #Total_Plot['Annual Small Power load (kWh/m2)']= 8572 /Floor_Area
 
@@ -113,8 +118,8 @@ Total_Plot=Total_Plot/GrossFloorArea
 #Total_Plot['Annual Fresh Air Load (kWh/m2)']=Total_Plot['Annual Fresh Air Load (kWh/m2)'].abs()
 #Total_Plot['Annual Fresh Air Load (kWh/m2)']=[Vent_Eng(Weather_Data,B_FA,12.9) for B_FA in Total_Plot['out:Annual Mech Ventilation']]
 
-Total_Plot['Annual Fresh Air Load (kWh/m2)']=(Total_Plot['Annual Heating Load (kWh/m2)']*FA_SPlit)*(1-AC_SPLIT)
-Total_Plot['Annual Air Curtain Load (kWh/m2)']=(Total_Plot['Annual Heating Load (kWh/m2)']*FA_SPlit)*(AC_SPLIT)
+Total_Plot['Annual Fresh Air Load (kWh/m2)']=(Total_Plot['Annual Heating Load (kWh/m2)']*FA_SPlit)#*(1-AC_SPLIT)
+#Total_Plot['Annual Air Curtain Load (kWh/m2)']=(Total_Plot['Annual Heating Load (kWh/m2)']*FA_SPlit)*(AC_SPLIT) SS by absolute value taken from hand calc
 
 Total_Plot['Annual Heating Load (kWh/m2)']=Total_Plot['Annual Heating Load (kWh/m2)']*(1-FA_SPlit)
 Total_Plot['FA Percentage']=(Total_Plot['Annual Fresh Air Load (kWh/m2)']/(Total_Plot['Annual Heating Load (kWh/m2)']+Total_Plot['Annual Fresh Air Load (kWh/m2)']))*100
@@ -244,7 +249,7 @@ def Supply_Side(Demand,SEL_Heat_Cool,SEL_DHW,SEL_Light,SEL_Light_CON,SEL_Equip,S
 
     Perm_Demand=SS_Input_Demand.iloc[Demand]
     #Specfy pv area 
-    PV_Area=80
+    PV_Area=1
     BuildingArea=GrossFloorArea
     
     Heat_Cool=Heating_Cooling[SEL_Heat_Cool]
@@ -387,7 +392,7 @@ print(Results.shape[0])
 #SQL.to_sql('Results', con=engine, index_label='Permutation Name',if_exists='replace')
 ResultsFR=Results.reset_index()
 
-FFP=r'C:\\Users\\JTHOM\\OneDrive - Ramboll\\Documents\\GitHub\\Bruntwood_V1\\data\\57b120e6-0e92-4ccd-b290-464769b02f7f\\Results_Plaza.feather'
+FFP=r'C:\\Users\\JTHOM\\OneDrive - Ramboll\\Documents\\GitHub\\Bruntwood_V1\\data\\57b120e6-0e92-4ccd-b290-464769b02f7f\\Results_Plaza_temp.feather'
 ResultsFR.to_feather(FFP)
 
 #df = pd.read_sql('Results', con=engine, index_col='Permutation Name')
