@@ -392,6 +392,8 @@ print(Results.shape[0])
 #SQL.to_sql('Results', con=engine, index_label='Permutation Name',if_exists='replace')
 ResultsFR=Results.reset_index()
 
+#FFP=r'C:\\Users\\JTHOM\\OneDrive - Ramboll\\Documents\\GitHub\\Bruntwood_V1\\data\\57b120e6-0e92-4ccd-b290-464769b02f7f\\Results_Plaza_texample.xlsx'
+#ResultsFR.to_excel(FFP)
 FFP=r'C:\\Users\\JTHOM\\OneDrive - Ramboll\\Documents\\GitHub\\Bruntwood_V1\\data\\57b120e6-0e92-4ccd-b290-464769b02f7f\\Results_Plaza_temp.feather'
 ResultsFR.to_feather(FFP)
 

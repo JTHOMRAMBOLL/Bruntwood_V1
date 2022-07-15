@@ -214,6 +214,8 @@ INT_Plug=list(range(0,len(EquipLoads),1))#[:2]
 INT_Vent=list(range(0,len(Ventilation),1))#[:2]
 INT_Renew=list(range(0,len(Renewables),1))#[:2]
 
+print(INT_Heat_Cool)
+
 runs=len(list(itertools.product(INT_Demand,INT_Heat_Cool,INT_DHW,INT_Light,INT_Light_CON,INT_Plug,INT_Vent,INT_Renew)))
 print("Run length>>>",runs)
 
